@@ -44,7 +44,7 @@ gl.attachShader(program, fShader)
 gl.linkProgram(program)
 
 const vertexArray = gl.createVertexArray()
-gl.bindVertexArray(program)
+gl.bindVertexArray(vertexArray)
 
 // buffers
 const positionBuffer = gl.createBuffer()
@@ -70,7 +70,7 @@ gl.bufferData(
 )
 
 const colorLocation = gl.getAttribLocation(program, 'color')
-gl.vertextAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0)
+gl.vertexAttribPointer(colorLocation, 3, gl.FLOAT, false, 0, 0)
 gl.vertexAttribDivisor(colorLocation, 1)
 gl.enableVertexAttribArray(colorLocation)
 
@@ -83,7 +83,7 @@ gl.bufferData(
 )
 
 const offsetLocation = gl.getAttribLocation(program, 'offset')
-gl.vertextAttribPointer(offsetLocation, 2, gl.FLOAT, false, 0, 0)
+gl.vertexAttribPointer(offsetLocation, 2, gl.FLOAT, false, 0, 0)
 gl.vertexAttribDivisor(offsetLocation, 1)
 gl.enableVertexAttribArray(offsetLocation)
 
