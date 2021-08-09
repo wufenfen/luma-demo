@@ -14,7 +14,8 @@
     "@luma.gl/engine": "^8.5.4",
     "@luma.gl/gltools": "^8.5.4",
     "@luma.gl/shadertools": "^8.5.4",
-    "@luma.gl/webgl": "^8.5.4"
+    "@luma.gl/webgl": "^8.5.4",
+    "math.gl": "^3.5.3"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.3.2",

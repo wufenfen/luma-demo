@@ -59,7 +59,7 @@
     "@luma.gl/gltools" "8.5.4"
     "probe.gl" "^3.4.0"
 
-"@math.gl/core@^3.5.0":
+"@math.gl/core@^3.5.0", "@math.gl/core@3.5.3":
   "integrity" "sha512-TaSnvG0qFh1VxeNW5L58jSx0nJUMWMpUl6zo6Z3ScQzFySG5cicGOBzk/D40RkIZWPazCKCZ+ZThg5npSK9y3g=="
   "resolved" "https://registry.npmjs.org/@math.gl/core/-/core-3.5.3.tgz"
   "version" "3.5.3"
@@ -1941,6 +1941,13 @@
   "version" "1.0.0"
   dependencies:
     "object-visit" "^1.0.0"
+
+"math.gl@^3.5.3":
+  "integrity" "sha512-cRQRZlc+XvNHd3bIfu3kdPPPAW0vwDelZJmkjn2TDvCyPcmyDtAiZ2Poo1aFoINP7HzN6oHYxapc/0wV3q6Opg=="
+  "resolved" "https://registry.npmjs.org/math.gl/-/math.gl-3.5.3.tgz"
+  "version" "3.5.3"
+  dependencies:
+    "@math.gl/core" "3.5.3"
 
 "media-typer@0.3.0":
   "integrity" "sha1-hxDXrwqmJvj/+hzgAWhUUmMlV0g="
