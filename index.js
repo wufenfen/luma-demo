@@ -1,87 +1,112 @@
-import {AnimationLoop, Model} from '@luma.gl/engine';
-import {Buffer, clear} from '@luma.gl/webgl';
+import {AnimationLoop, Model, CubeGeometry} from '@luma.gl/engine';
+import {Texture2D, clear} from '@luma.gl/webgl';
+import {setParameters} from '@luma.gl/gltools';
+import {phongLighting} from '@luma.gl/shadertools';
+import {Matrix4} from '@math.gl/core';
+const vs = `\
+  attribute vec3 positions;
+  attribute vec2 texCoords;
+  attribute vec3 normals;
 
-const vs1 = `
-  attribute vec2 position;
+  uniform mat4 uModel;
+  uniform mat4 uMVP;
 
-  void main() {
-    gl_Position = vec4(position - vec2(0.5, 0.0), 0.0, 1.0);
+  varying vec2 vUV;
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+
+  void main(void) {
+    vPosition = (uModel * vec4(positions, 1.0)).xyz;
+    vNormal = mat3(uModel)*normals;
+    vUV = texCoords;
+    gl_Position = uMVP * vec4(positions, 1.0);
   }
 `;
 
-const fs1 = `
-  uniform vec3 hsvColor;
+const fs = `\
+  precision highp float;
 
-  void main() {
-    gl_FragColor = vec4(color_hsv2rgb(hsvColor), 1.0);
+  uniform sampler2D uTexture;
+  uniform vec3 uEyePosition;
+
+  varying vec3 vPosition;
+  varying vec3 vNormal;
+  varying vec2 vUV;
+
+  void main(void) {
+    vec3 materialColor = texture2D(uTexture, vec2(vUV.x, 1.0 - vUV.y)).rgb;
+    vec3 surfaceColor = lighting_getLightColor(materialColor, uEyePosition, vPosition, normalize(vNormal));
+
+    gl_FragColor = vec4(surfaceColor, 1.0);
   }
 `;
-
-const vs2 = `
-  attribute vec2 position;
-
-  void main() {
-    gl_Position = vec4(position + vec2(0.5, 0.0), 0.0, 1.0);
-  }
-`;
-
-const fs2 = `
-  uniform vec3 hsvColor;
-
-  void main() {
-    gl_FragColor = vec4(color_hsv2rgb(hsvColor) - 0.3, 1.0);
-  }
-`;
-
-// Taken from http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
-const colorModule = {
-  name: 'color',
-  fs: `
-    vec3 color_hsv2rgb(vec3 c) {
-      vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-      vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-      return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-    }
-  `
-};
 
 const loop = new AnimationLoop({
   onInitialize({gl}) {
-    const positionBuffer = new Buffer(gl, new Float32Array([-0.3, -0.5, 0.3, -0.5, 0.0, 0.5]));
+    setParameters(gl, {
+      depthTest: true,
+      depthFunc: gl.LEQUAL
+    });
 
-    const model1 = new Model(gl, {
-      vs: vs1,
-      fs: fs1,
-      modules: [colorModule],
-      attributes: {
-        position: positionBuffer
-      },
+    const texture = new Texture2D(gl, {
+      data: 'vis-logo.jpg'
+    });
+
+    const eyePosition = [0, 0, 5];
+    const modelMatrix = new Matrix4();
+    const viewMatrix = new Matrix4().lookAt({eye: eyePosition});
+    const mvpMatrix = new Matrix4();
+
+    const model = new Model(gl, {
+      vs,
+      fs,
+      geometry: new CubeGeometry(),
       uniforms: {
-        hsvColor: [0.7, 1.0, 1.0]
+        uTexture: texture,
+        uEyePosition: eyePosition
       },
-      vertexCount: 3
+      modules: [phongLighting],
+      moduleSettings: {
+        material: {
+          specularColor: [255, 255, 255]
+        },
+        lights: [
+          {
+            type: 'ambient',
+            color: [255, 255, 255]
+          },
+          {
+            type: 'point',
+            color: [255, 255, 255],
+            position: [1, 2, 1]
+          }
+        ]
+      }
     });
 
-    const model2 = new Model(gl, {
-      vs: vs2,
-      fs: fs2,
-      modules: [colorModule],
-      attributes: {
-        position: positionBuffer
-      },
-      uniforms: { 
-        hsvColor: [1.0, 1.0, 1.0]
-      },
-      vertexCount: 3
-    });
-
-    return {model1, model2};
+    return {
+      model,
+      modelMatrix,
+      viewMatrix,
+      mvpMatrix
+    };
   },
 
-  onRender({gl, model1, model2}) {
-    clear(gl, {color: [0, 0, 0, 1]});
-    model1.draw();
-    model2.draw();
+  onRender({gl, aspect, tick, model, mvpMatrix, modelMatrix, viewMatrix}) {
+    modelMatrix
+      .identity()
+      .rotateX(tick * 0.01)
+      .rotateY(tick * 0.013);
+
+
+    mvpMatrix.perspective({fov: Math.PI / 3, aspect})
+      .multiplyRight(viewMatrix)
+      .multiplyRight(modelMatrix);
+
+    clear(gl, {color: [1, 1, 1, 1]});
+
+    model.setUniforms({uMVP: mvpMatrix, uModel: modelMatrix})
+      .draw();
   }
 });
 
